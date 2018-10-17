@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,600,700,300' rel='stylesheet' type='text/css'>
+  <link rel='stylesheet prefetch' href='https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css'><link rel='stylesheet prefetch' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.2/css/font-awesome.min.css'>
+  <link rel="stylesheet" type="text/css" href="chatBotStyle.css">
+  <script src='https://code.jquery.com/jquery-2.2.4.min.js'></script>
+  <script type="text/javascript" src="lib/axios/dist/axios.standalone.js"></script>
+  <script type="text/javascript" src="lib/CryptoJS/rollups/hmac-sha256.js"></script>
+  <script type="text/javascript" src="lib/CryptoJS/rollups/sha256.js"></script>
+  <script type="text/javascript" src="lib/CryptoJS/components/hmac.js"></script>
+  <script type="text/javascript" src="lib/CryptoJS/components/enc-base64.js"></script>
+  <script type="text/javascript" src="lib/url-template/url-template.js"></script>
+  <script type="text/javascript" src="lib/apiGatewayCore/sigV4Client.js"></script>
+  <script type="text/javascript" src="lib/apiGatewayCore/apiGatewayClient.js"></script>
+  <script type="text/javascript" src="lib/apiGatewayCore/simpleHttpClient.js"></script>
+  <script type="text/javascript" src="lib/apiGatewayCore/utils.js"></script>
+  <script type="text/javascript" src="apigClient.js"></script>
+  <script type = "text/javascript">
+      var apigClient = apigClientFactory.newClient({
+                  apiKey: 'gMETY1m71K2Md1VzumPaG1biS5H7JZ8j6MS4S1UD'
+                });
+
+      var params = {};
+      function sendQuery(msg)
+      {
+        body = {
+            "messages": [
+              {
+                "type": "string",
+                "unstructured": {
+                  "id": "1",
+                  "text": msg,
+                  "timestamp": "10/06"
+                }
+              }
+            ]
+        };
+        apigClient.chatbotPost(params, body)
+          .then(function(result){
+            reply = result.data.messages[0].unstructured.text
+            newMessage(reply, "replies")
+            // Add success callback code here.
+          }).catch( function(result){
+            alert("Ooops !!")
+            // Add error callback code here.
+          });
+      }
+    </script>
+</head>
+<body>
+  <div id="frame">
+  	<div id="sidepanel">
+  		<div id="profile">
+  			<div class="wrap">
+  				<p>AT YOUR SERVICE</p>
+  			</div>
+  		</div>
+  		<div id="search">
+  		</div>
+  		<div id="contacts">
+  		</div>
+  		<div id="bottom-bar">
+  		</div>
+  	</div>
+  	<div class="content">
+  		<div class="contact-profile">
+        <img src="https://s3.amazonaws.com/mandalay-cdn/otter/wp-content/uploads/20170925030644/call_us.png" alt="" />
+        <p>Customer Service</p>
+  		</div>
+  		<div class="messages">
+  			<ul>
+  			</ul>
+  		</div>
+  		<div class="message-input">
+  			<div class="wrap">
+  			<input type="text" placeholder="Write your message..." />
+  			<i class="fa fa-paperclip attachment" aria-hidden="true"></i>
+  			<button class="submit"><i class="fa fa-paper-plane" aria-hidden="true"></i></button>
+  			</div>
+  		</div>
+  	</div>
+  </div>
+  <script>
+    $(".messages").animate({ scrollTop: $(document).height() }, "fast");
+
+    function newMessage(msg, typ) {
+      $('<li class="'+typ+'"><img src="https://alphabetdatesdotcodotuk.files.wordpress.com/2016/02/c.png" alt="" /><p>' + msg + '</p></li>').appendTo($('.messages ul'));
+      $('.message-input input').val(null);
+      $(".messages").animate({ scrollTop: $(document).height() }, "fast");
+    };
+
+    function setMessage(){
+      message = $(".message-input input").val();
+      if($.trim(message) == '') {
+        return false;
+      }
+      newMessage(message, "sent");
+      sendQuery(message);
+    }
+    $('.submit').click(function() {
+      setMessage();
+    });
+
+    $(window).on('keydown', function(e) {
+      if (e.which == 13) {
+        setMessage();
+        return false;
+      }
+    });
+  </script>
+</body>
+</html>
