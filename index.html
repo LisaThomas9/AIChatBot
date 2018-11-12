@@ -5,6 +5,8 @@
   <link rel='stylesheet prefetch' href='https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css'><link rel='stylesheet prefetch' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.2/css/font-awesome.min.css'>
   <link rel="stylesheet" type="text/css" href="chatBotStyle.css">
   <script src='https://code.jquery.com/jquery-2.2.4.min.js'></script>
+
+  
   <script type="text/javascript" src="lib/axios/dist/axios.standalone.js"></script>
   <script type="text/javascript" src="lib/CryptoJS/rollups/hmac-sha256.js"></script>
   <script type="text/javascript" src="lib/CryptoJS/rollups/sha256.js"></script>
@@ -16,12 +18,87 @@
   <script type="text/javascript" src="lib/apiGatewayCore/simpleHttpClient.js"></script>
   <script type="text/javascript" src="lib/apiGatewayCore/utils.js"></script>
   <script type="text/javascript" src="apigClient.js"></script>
-  <script type = "text/javascript">
-      var apigClient = apigClientFactory.newClient({
-                  apiKey: 'gMETY1m71K2Md1VzumPaG1biS5H7JZ8j6MS4S1UD'
-                });
 
+  <script src="dist/aws-cognito-sdk.js"></script>
+  <script type="text/javascript" src="dist/amazon-cognito-auth.js"></script>
+  <script src="https://sdk.amazonaws.com/js/aws-sdk-2.6.10.min.js"></script>
+
+  <script type = "text/javascript">
+
+      var apigClient;
       var params = {};
+      var accessKeyId;
+      var secretAccessKey;
+      var sessionToken;
+      var idToken;
+
+      function initCognitoSDK() {
+          var authData = {
+            ClientId : '6349sdhf9epfgqg7ube429v0g7', // Your client id here
+            AppWebDomain : 'myuserdomain.auth.us-east-1.amazoncognito.com', // Exclude the "https://" part. 
+            TokenScopesArray : ['openid', 'email', 'aws.cognito.signin.user.admin'], // like ['openid','email','phone']...
+            RedirectUriSignIn : 'https://s3.amazonaws.com/aichatbotbucket/index.html',
+            RedirectUriSignOut : 'https://www.google.com/',
+            UserPoolId : 'us-east-1_avicyXApq' 
+          };
+          
+          var auth = new AmazonCognitoIdentity.CognitoAuth(authData);
+          
+          auth.userhandler = {
+            
+            onSuccess: function(result) {
+              //alert("Sign in success");
+              //alert(auth.getCurrentUser());
+              idToken = result.getIdToken().getJwtToken();
+              //alert(idToken);
+            },
+            onFailure: function(err) {
+              alert("Error!" + err);
+            }
+          };
+          // The default response_type is "token", uncomment the next line will make it be "code".
+          // auth.useCodeGrantFlow();
+          return auth;
+        }
+
+      function onLoad()
+      {
+
+        var auth = initCognitoSDK();
+        var curUrl = window.location.href;
+        auth.parseCognitoWebResponse(curUrl);
+        
+        //alert("Before session call");
+        //auth.getSession();
+
+        if(auth.signInUserSession == null || !auth.signInUserSession.isValid())
+        {
+          signin_url = "https://myuserdomain.auth.us-east-1.amazoncognito.com/login?response_type=token&client_id=6349sdhf9epfgqg7ube429v0g7&redirect_uri=https://s3.amazonaws.com/aichatbotbucket/index.html"
+          window.location = signin_url
+        }
+        // Initialize the Amazon Cognito credentials provider
+        AWS.config.region = 'us-east-1'; // Region
+          // Add the User's Id Token to the Cognito credentials login map.
+        AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+          IdentityPoolId: 'us-east-1:5e8e7252-4718-4f9b-bf55-a096d79a9407',
+          Logins: {
+            'cognito-idp.us-east-1.amazonaws.com/us-east-1_avicyXApq': idToken
+          }
+        });
+
+        // Make the call to obtain credentials
+        AWS.config.credentials.get(function(){
+            // Credentials will be available when this function is called.
+            alert("Getting credentials")
+            apigClient = apigClientFactory.newClient({
+                        accessKey: AWS.config.credentials.accessKeyId, 
+                        secretKey: AWS.config.credentials.secretAccessKey, 
+                        sessionToken: AWS.config.credentials.sessionToken,
+                        apiKey: 'gMETY1m71K2Md1VzumPaG1biS5H7JZ8j6MS4S1UD'
+                      });
+        });
+      }
+
       function sendQuery(msg)
       {
         body = {
@@ -48,12 +125,12 @@
       }
     </script>
 </head>
-<body>
+<body onload="onLoad()">
   <div id="frame">
   	<div id="sidepanel">
   		<div id="profile">
   			<div class="wrap">
-  				<p>AT YOUR SERVICE</p>
+  				<p>DINING CONCEIRGE</p>
   			</div>
   		</div>
   		<div id="search">
